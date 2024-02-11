@@ -1,0 +1,22 @@
+{
+  "name": "custome-promise",
+  "version": "1.0.0",
+  "description": "miriam implement a custom promise",
+  "main": "myPromise.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lqi11/customPromise.git"
+  },
+  "keywords": [
+    "promise"
+  ],
+  "author": "lqi11",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lqi11/customPromise/issues"
+  },
+  "homepage": "https://github.com/lqi11/customPromise#readme"
+}
