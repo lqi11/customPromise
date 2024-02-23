@@ -4,7 +4,7 @@
   "description": "miriam implement a custom promise",
   "main": "myPromise.js",
   "scripts": {
-    "test": "test"
+    "test": "jest --watchAll --noStackTrace"
   },
   "repository": {
     "type": "git",
@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/lqi11/customPromise/issues"
   },
-  "homepage": "https://github.com/lqi11/customPromise#readme"
+  "homepage": "https://github.com/lqi11/customPromise#readme",
+  "dependencies": {
+    "jest": "^29.7.0"
+  }
 }

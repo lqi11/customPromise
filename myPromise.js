@@ -1,84 +1,140 @@
-const STATE = {
-    pending,
-    fulfilled,
-    rejected
-}
-class CustomPromise {
-    constructor(executor){
-        this.value=undefined
-        this.reason = undefined
-        this.status=STATE.pending
-        this.fulfilledCallbacks=[]
-        this.rejectedCallbacks=[]
-        executor(this.resolve.bind(this),this.reject.bind(this))
+const states = {
+    pending: "pending",
+    fulfilled: "fulfilled",
+    rejected: "rejected"
+  };
+  
+class Prom {
+    constructor(executor) {
+      if (typeof executor === "undefined") {
+        throw new Error("Missing executor");
+      }
+  
+      if (typeof executor !== "function") {
+        throw new Error("Executor must be a function");
+      }
+  
+      this.promiseState = states.pending;
+      this.result = null;
+      this.fulfilledCallBacks = [];
+      this.rejectedCallBacks = [];
+  
+      try {
+        executor(this.resolve.bind(this), this.reject.bind(this));
+      } catch (err) {
+        this.reject.call(this, err);
+      }
     }
-
-    resolve(value){
-        if(this.status===STATE.pending){
-            this.value=value
-            this.status=STATE.fulfilled
-            this.handleFulfilledCallbacks(this.value)
+  
+    then(fulfilledCallback, rejectedCallBack) {
+      const promise = new Prom(() => {});
+      if (typeof fulfilledCallback === "function") {
+        this.fulfilledCallBacks.push([fulfilledCallback, promise]);
+      }
+      if (typeof rejectedCallBack === "function") {
+        this.rejectedCallBacks.push([rejectedCallBack, promise]);
+      }
+      this.processQueue();
+      return promise;
+    }
+  
+    catch(rejectedCallBack) {
+      return this.then(undefined, rejectedCallBack);
+    }
+  
+    finally(finallyCb) {
+      return this.then(
+        (res) => {
+          finallyCb();
+          return res;
+        },
+        (err) => {
+          finallyCb();
+          throw err;
         }
+      );
     }
-
-    reject(reason){  
-        if (this.status === STATE.pending) {
-            this.reason = reason
-            this.status = STATE.rejected
-            this.handleRejectedCallbacks(this.reason)
+  
+    resolve(value) {
+      if (this.promiseState !== states.pending) {
+        throw new Error("Promise is already settled.");
+      }
+      this.result = value;
+      this.promiseState = states.fulfilled;
+      this.processQueue();
+    }
+  
+    reject(reason) {
+      if (this.promiseState !== states.pending) {
+        throw new Error("Promise is already settled.");
+      }
+      this.result = reason;
+      this.promiseState = states.rejected;
+      this.processQueue();
+    }
+  
+    processQueue() {
+      switch (this.promiseState) {
+        case states.fulfilled:
+          this.processFulfilledState();
+          break;
+        case states.rejected:
+          this.processRejectedCallState();
+          break;
+      }
+    }
+  
+    processFulfilledState() {
+      if (this.fulfilledCallBacks.length) {
+        // case where there is then block in fulfilled state
+        for (const [fulfilledCallback, promise] of this.fulfilledCallBacks) {
+          const fulfilledValue = fulfilledCallback(this.result);
+  
+          if (fulfilledValue instanceof Prom) {
+            fulfilledValue.then(
+              (val) => promise.resolve(val),
+              (err) => promise.reject(err)
+            );
+          } else {
+            promise.resolve(fulfilledValue);
+          }
         }
-    }
-
-    handleFulfilledCallbacks(value){
-        this.fulfilledCallbacks.forEach(callback=>{
-            // this first item is callback, the second is new promise
-            const curResolvedResult= callback[0](value) // the result of then
-            // this is when it returns Promise("5")
-            if (curResolvedResult instanceof CustomPromise) {
-                // how does this value come from? it should be the second then result
-                curResolvedResult.then(value=>{
-                    callback[1].resolve(value)
-                }, reason=>{
-                    callback[1].reject(reason)
-                })
-            } else {
-                // this is normal case, calling resolve on behalf of then
-                callback[1].resolve(curResolvedResult)
-            }
-        })
-    }
-
-    handleRejectedCallbacks(reason){ 
-        this.rejectedCallbacks.forEach(callback=>{
-            const curResolvedResult= callback[0](reason)
-            if (curResolvedResult instanceof CustomPromise) {
-                curResolvedResult.then(value=>{
-                    callback[1].resolve(value)
-                }, reason=>{
-                    callback[1].reject(reason)
-                })
-            } else {
-                callback[1].reject(curResolvedResult)
-            }
-        }) 
-    }
-
-
-    then(onFulfilled, onRejected){
-        // create a empty promise, this promise doesn't need executor, because this promise will
-        // help it bind resolve and reject
-        const newPromise = new CustomPromise(()=>{})
-        if(this.status===STATE.fulfilled){
-            onFulfilled(this.value)
+      } else if (this.rejectedCallBacks.length) {
+        // case where there is catch block in fulfilled state
+        for (const [_, promise] of this.rejectedCallBacks) {
+          promise.resolve(this.result);
         }
-        if(this.status===STATE.rejected){
-            onRejected(this.value)
-        }
-        if(this.status===STATE.pending){
-            this.fulfilledCallbacks.push([onFulfilled, newPromise])
-            this.rejectedCallbacks.push([onRejected, newPromise])
-        }
-        return newPromise
+      }
+      this.clearQueue();
     }
-
-}
+  
+    processRejectedCallState() {
+      if (this.rejectedCallBacks.length) {
+        // case where there is catch block in rejected state
+        for (const [rejectedCallBack, promise] of this.rejectedCallBacks) {
+          const rejectedValue = rejectedCallBack(this.result);
+  
+          if (rejectedValue instanceof Prom) {
+            rejectedValue.then(
+              (val) => promise.resolve(val),
+              (err) => promise.reject(err)
+            );
+          } else {
+            promise.resolve(rejectedValue);
+          }
+        }
+      } else if (this.fulfilledCallBacks.length) {
+        // case where there is then block in rejected state
+        for (const [_, promise] of this.fulfilledCallBacks) {
+          promise.reject(this.result);
+        }
+      }
+      this.clearQueue();
+    }
+  
+    clearQueue() {
+      this.fulfilledCallBacks = [];
+      this.rejectedCallBacks = [];
+    }
+  }
+  module.exports = MyPromise
