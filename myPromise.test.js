@@ -1,9 +1,9 @@
-import Prom from "./myPromise"
+const Prom = require("./myPromise")
 describe("Prom", () => {
     it("should fulfill multiple then of same promise instance", () => {
       const promise = new Prom((resolve) => {
         setTimeout(() => {
-          resolve(1000);
+          resolve(1000);// which resolve this is? is it the Prom's resolve? Yes
         }, 1000);
       });
   
@@ -178,6 +178,7 @@ describe("Prom", () => {
         })
         .then((result) => {
           expect(result).toBe(1000);
+          // what does the done do?
           done();
         });
     });
