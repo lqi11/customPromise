@@ -75,6 +75,7 @@ class Prom {
   
     processQueue() {
       switch (this.promiseState) {
+        // what if the state is pending?
         case states.fulfilled:
           this.processFulfilledState();
           break;
@@ -88,10 +89,10 @@ class Prom {
       if (this.fulfilledCallBacks.length) {
         // case where there is then block in fulfilled state
         for (const [fulfilledCallback, promise] of this.fulfilledCallBacks) {
-          const fulfilledValue = fulfilledCallback(this.result);
-  
+          const fulfilledValue = fulfilledCallback(this.result); // what if it is null? for example in the first test.
+          //fulfilledValue = p1
           if (fulfilledValue instanceof Prom) {
-            fulfilledValue.then(
+            fulfilledValue.then( // whose then it is?, is it the same as line 74?
               (val) => promise.resolve(val),
               (err) => promise.reject(err)
             );

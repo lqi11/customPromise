@@ -61,7 +61,7 @@ describe("Prom", () => {
       // api call
       const p1 = new Prom((resolve) => {
         setTimeout(() => {
-          resolve(2000);
+          resolve(2000); // resolve is called within the executor
         }, 500);
       });
   
