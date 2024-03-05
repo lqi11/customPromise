@@ -137,4 +137,4 @@ class Prom {
       this.rejectedCallBacks = [];
     }
   }
-  module.exports = MyPromise
+  module.exports = Prom
