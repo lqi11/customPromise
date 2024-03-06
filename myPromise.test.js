@@ -227,6 +227,54 @@ describe("Prom", () => {
         expect(error.message).toBe("Something went wrong!");
       });
     });
-  });
+    // test static resolve and reject
+    it("should return a given value if a value is resolved", ()=>{
+      const value = Prom.resolve(1000)
+      value.then((result)=>{
+        expect(result).toBe(1000)
+      })
+    })
+    it("should return a promise if a promise is resolved", ()=>{
+      const p1 = new Prom((resolve)=>{
+        setTimeout(() => {
+          resolve(1000);
+        }, 1000);
+      })
+      const value = Prom.resolve(p1)
+      value.then((result)=>{
+        expect(result).toBe(p1) // why it is the same as p1?
+        //because you have called then. value is not the same as p1, but the resolved value is p1
+      })
+    })
+    it("should resolve it when a thenable object put into Prom.resolve", ()=>{
+      const thenable = {
+        then(resolve){
+          setTimeout(()=>{
+            resolve(1000) 
+          }, 1000)
+         // resolve(1000)
+        }
+      }
+      // const thenable = {
+      //   then: (resolve)=>{
+      //     setTimeout(()=>{
+      //       resolve(1000) 
+      //     }, 1000)
+      //   }
+      // }
+
+      
+      const value = Prom.resolve(thenable)
+      // const value = Prom.resolve({
+      //   then(resolve){
+      //     resolve(1000)
+      //   }
+      // })
+      value.then((result)=>{
+        expect(result).resolves.toBe(1000)
+      })
+    })
+  })
+  
   
   

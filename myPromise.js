@@ -25,6 +25,16 @@ class Prom {
         this.reject.call(this, err);
       }
     }
+    static resolve(value){
+      return new Prom((resolve)=>{
+        resolve(value)
+      })
+    }
+    static reject(reason){
+      return new Prom((resolve, reject)=>{
+        reject(reason)
+      })
+    }
   
     then(fulfilledCallback, rejectedCallBack) {
       const promise = new Prom(() => {});
